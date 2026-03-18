@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -32,7 +34,7 @@ class Ps_Dataprivacy extends Module
     /**
      * @var string Name of the module running on PS 1.6.x. Used for data migration.
      */
-    const PS_16_EQUIVALENT_MODULE = 'blockcustomerprivacy';
+    public const PS_16_EQUIVALENT_MODULE = 'blockcustomerprivacy';
 
     public function __construct()
     {
@@ -163,14 +165,15 @@ class Ps_Dataprivacy extends Module
                             'Modules.Dataprivacy.Admin'
                         ),
                         'name' => 'CUSTPRIV_MSG_AUTH',
-                        'desc' => $this->trans('The customer data privacy message will be displayed in the customer form',
-                                [],
-                                'Modules.Dataprivacy.Admin'
-                            ) . '<br>' . $this->trans(
-                                'Tip: If the customer privacy message is too long to be written directly in the form, you can add a link to one of your pages. This can easily be created via the "Pages" page under the "Design" menu.',
-                                [],
-                                'Modules.Dataprivacy.Admin'
-                            ),
+                        'desc' => $this->trans(
+                            'The customer data privacy message will be displayed in the customer form',
+                            [],
+                            'Modules.Dataprivacy.Admin'
+                        ) . '<br>' . $this->trans(
+                            'Tip: If the customer privacy message is too long to be written directly in the form, you can add a link to one of your pages. This can easily be created via the "Pages" page under the "Design" menu.',
+                            [],
+                            'Modules.Dataprivacy.Admin'
+                        ),
                     ],
                 ],
                 'submit' => [
@@ -226,7 +229,8 @@ class Ps_Dataprivacy extends Module
                     'The personal data you provide is used to answer queries, process orders or allow access to specific information. You have the right to modify and delete all the personal information found in the "My Account" page.',
                     [],
                     'Modules.Dataprivacy.Admin',
-                    $lang['locale']),
+                    $lang['locale']
+                ),
             ]);
         }
 

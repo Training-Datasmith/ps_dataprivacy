@@ -101,10 +101,11 @@ class Ps_Dataprivacy extends Module
         if (Tools::isSubmit('submitCustPrivMess')) {
             $message_trads = ['auth' => []];
 
-            foreach ($_POST as $key => $value) {
-                if (preg_match('/CUSTPRIV_MSG_AUTH_/i', $key)) {
-                    $id_lang = preg_split('/CUSTPRIV_MSG_AUTH_/i', $key);
-                    $message_trads['auth'][(int) $id_lang[1]] = $value;
+            foreach (Language::getLanguages(false) as $language) {
+                $id_lang = (int) $language['id_lang'];
+                $value = Tools::getValue('CUSTPRIV_MSG_AUTH_' . $id_lang);
+                if ($value !== false) {
+                    $message_trads['auth'][$id_lang] = $value;
                 }
             }
 

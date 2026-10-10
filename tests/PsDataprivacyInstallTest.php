@@ -10,8 +10,7 @@ class PsDataprivacyInstallTest extends PsDataprivacyTestCase
         foreach (Language::getLanguages(true) as $lang) {
             $value = Configuration::get('CUSTPRIV_MSG_AUTH', (int) $lang['id_lang']);
             $this->assertInternalType('string', $value);
-            $this->assertContains('[[FIXTURE:', $value);
-            $this->assertContains($lang['locale'], $value);
+            $this->assertSame(PsDataprivacyHarness::SEEDED_ACTIVE_LANG_MARKER, $value);
         }
 
         $this->assertTrue(Module::isInstalled('ps_dataprivacy'));

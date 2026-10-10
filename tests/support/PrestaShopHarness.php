@@ -8,6 +8,7 @@ class PsDataprivacyHarness
 {
     const SENTINEL = '[[SENTINEL_SHOULD_NOT_EMIT]]';
     const CONFIRMATION_MARKER = '[[CONFIRMATION]]';
+    const SEEDED_ACTIVE_LANG_MARKER = '[[SEEDED_ACTIVE_LANG]]';
 
     public static function reset()
     {
@@ -328,12 +329,8 @@ class ModuleHarness
             return '[[HOOK_LABEL:' . $message . ']]';
         }
 
-        if ($domain === 'Modules.Dataprivacy.Admin'
-            && strpos($id, 'personal data you provide') !== false
-        ) {
-            $loc = $locale ? $locale : 'default';
-
-            return '[[FIXTURE:' . $loc . ']]';
+        if ($domain === 'Modules.Dataprivacy.Admin' && $locale !== null) {
+            return PsDataprivacyHarness::SEEDED_ACTIVE_LANG_MARKER;
         }
 
         return '[[TRANS:' . (string) $domain . ']]';

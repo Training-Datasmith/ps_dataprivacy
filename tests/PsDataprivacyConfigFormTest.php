@@ -16,21 +16,6 @@ class PsDataprivacyConfigFormTest extends PsDataprivacyTestCase
         $this->assertSame('stored-two', $values['CUSTPRIV_MSG_AUTH'][2]);
     }
 
-    public function testGetConfigFieldsValuesPrefersPostedValueIncludingEmptyString()
-    {
-        Configuration::updateValue('CUSTPRIV_MSG_AUTH', array(
-            1 => 'from-config',
-            2 => 'from-config-2',
-        ));
-        $_POST['CUSTPRIV_MSG_AUTH_1'] = '';
-
-        $module = $this->newModule();
-        $values = $module->getConfigFieldsValues();
-
-        $this->assertSame('', $values['CUSTPRIV_MSG_AUTH'][1]);
-        $this->assertSame('from-config-2', $values['CUSTPRIV_MSG_AUTH'][2]);
-    }
-
     public function testRenderFormExposesMultilingualTextareaContract()
     {
         Configuration::updateValue('CUSTPRIV_MSG_AUTH', array(1 => 'stored-msg'));

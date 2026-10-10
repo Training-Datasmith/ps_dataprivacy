@@ -11,13 +11,34 @@ if (!is_file($phar)) {
 }
 
 $workspace = dirname(__DIR__);
-$testFiles = glob($workspace . '/tests/*Test.php');
-sort($testFiles, SORT_STRING);
+$expectedTestCount = 21;
+$expectedTestFileNames = array(
+    'tests/ExitGuardTest.php',
+    'tests/PsDataprivacyConfigFormTest.php',
+    'tests/PsDataprivacyGetContentTest.php',
+    'tests/PsDataprivacyHookTest.php',
+    'tests/PsDataprivacyInstallTest.php',
+    'tests/PsDataprivacyMetadataTest.php',
+    'tests/UpgradeModule210Test.php',
+);
+sort($expectedTestFileNames, SORT_STRING);
 
-if (count($testFiles) === 0) {
-    fwrite(STDERR, "No test files found.\n");
+$expectedTestFiles = array();
+foreach ($expectedTestFileNames as $relativePath) {
+    $expectedTestFiles[] = $workspace . '/' . $relativePath;
+}
+
+$discoveredTestFiles = glob($workspace . '/tests/*Test.php');
+sort($discoveredTestFiles, SORT_STRING);
+
+if ($discoveredTestFiles !== $expectedTestFiles) {
+    fwrite(STDERR, "Discovered test files do not match the pinned gate list.\n");
+    fwrite(STDERR, 'Expected: ' . implode(', ', $expectedTestFileNames) . "\n");
+    fwrite(STDERR, 'Found: ' . implode(', ', array_map('basename', $discoveredTestFiles)) . "\n");
     exit(1);
 }
+
+$testFiles = $expectedTestFiles;
 
 function runPhpunitCapture($phar, $workspace, $files = null)
 {
@@ -57,6 +78,26 @@ function parsePhpunitTestCount($output)
     return null;
 }
 
+function assertExpectedTestCount($label, $actual, $expected, &$failures)
+{
+    if ($actual === null) {
+        fwrite(STDERR, "Could not parse test count for {$label}.\n");
+        ++$failures;
+
+        return false;
+    }
+    if ($actual !== $expected) {
+        fwrite(STDERR, "{$label} test count {$actual} != {$expected}\n");
+        ++$failures;
+
+        return false;
+    }
+
+    fwrite(STDOUT, "{$label} test count: {$actual}\n");
+
+    return true;
+}
+
 function runPhpunitFileOrder($phar, $workspace, array $files)
 {
     $totalTests = 0;
@@ -88,19 +129,14 @@ function seededFileOrder(array $sortedFiles)
 }
 
 $failures = 0;
-$expectedTestCount = null;
 
 fwrite(STDOUT, "=== Gate run 1/4: default order ===\n");
 $run1 = runPhpunitCapture($phar, $workspace);
 if ($run1['exit'] !== 0) {
     fwrite(STDERR, $run1['output'] . "\n");
     ++$failures;
-} elseif ($run1['tests'] === null) {
-    fwrite(STDERR, "Could not parse test count for default run 1.\n");
-    ++$failures;
 } else {
-    $expectedTestCount = $run1['tests'];
-    fwrite(STDOUT, "Default run test count: {$expectedTestCount}\n");
+    assertExpectedTestCount('Default run 1', $run1['tests'], $expectedTestCount, $failures);
 }
 
 fwrite(STDOUT, "=== Gate run 2/4: default order ===\n");
@@ -108,18 +144,14 @@ $run2 = runPhpunitCapture($phar, $workspace);
 if ($run2['exit'] !== 0) {
     fwrite(STDERR, $run2['output'] . "\n");
     ++$failures;
-} elseif ($run2['tests'] === null) {
-    fwrite(STDERR, "Could not parse test count for default run 2.\n");
-    ++$failures;
-} elseif ($expectedTestCount !== null && $run2['tests'] !== $expectedTestCount) {
-    fwrite(STDERR, "Default run 2 test count {$run2['tests']} != {$expectedTestCount}\n");
-    ++$failures;
+} else {
+    assertExpectedTestCount('Default run 2', $run2['tests'], $expectedTestCount, $failures);
 }
 
 for ($seededRun = 3; $seededRun <= 4; ++$seededRun) {
     fwrite(STDOUT, "=== Gate run {$seededRun}/4: seeded shuffle ===\n");
     $shuffled = seededFileOrder($testFiles);
-    if (count($shuffled) !== count($testFiles)) {
+    if (count($shuffled) !== count($expectedTestFileNames)) {
         fwrite(STDERR, "Seeded file list length mismatch.\n");
         ++$failures;
         continue;
@@ -129,14 +161,7 @@ for ($seededRun = 3; $seededRun <= 4; ++$seededRun) {
         ++$failures;
         continue;
     }
-    fwrite(STDOUT, "Seeded run test count: {$result['tests']}\n");
-    if ($expectedTestCount === null) {
-        fwrite(STDERR, "Missing baseline test count from default run.\n");
-        ++$failures;
-    } elseif ($result['tests'] !== $expectedTestCount) {
-        fwrite(STDERR, "Seeded run {$seededRun} test count {$result['tests']} != {$expectedTestCount}\n");
-        ++$failures;
-    }
+    assertExpectedTestCount("Seeded run {$seededRun}", $result['tests'], $expectedTestCount, $failures);
 }
 
 if ($failures > 0) {
